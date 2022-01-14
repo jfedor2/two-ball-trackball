@@ -40,7 +40,7 @@ void PMW3360::update() {
     write_register(Motion, 0x01);
     uint8_t motion = read_register(Motion);
 
-    is_on_surface = motion & (1 << 3);
+    is_on_surface = !(motion & (1 << 3));
 
     movement[0] = read_register(Delta_X_L);
     movement[0] |= ((int16_t) read_register(Delta_X_H)) << 8;
