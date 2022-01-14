@@ -279,16 +279,17 @@ uint32_t prev_pin_state = 0xffffffff;
 bool click_drag = false;
 uint8_t current_cpi[NBALLS] = { 0 };
 
-void handle_scroll(int ball, int axis, BallFunction ball_function, int16_t movement, int16_t* destination, uint8_t multiplier_mask) {
+int16_t handle_scroll(int ball, int axis, BallFunction ball_function, int16_t movement, uint8_t multiplier_mask) {
+    int16_t ret = 0;
     if (resolution_multiplier & multiplier_mask) {
-        *destination += movement;
+        ret = movement;
     } else {
         if (movement != 0) {
             last_scroll_timestamp[ball][axis] = time_us_64();
             accumulated_scroll[ball][axis] += movement;
             int ticks = accumulated_scroll[ball][axis] / 120;
             accumulated_scroll[ball][axis] -= ticks * 120;
-            *destination += ticks;
+            ret = ticks;
         } else {
             if ((accumulated_scroll[ball][axis] != 0) &&
                 (time_us_64() - last_scroll_timestamp[ball][axis] > 1000000)) {
@@ -296,6 +297,7 @@ void handle_scroll(int ball, int axis, BallFunction ball_function, int16_t movem
             }
         }
     }
+    return ret;
 }
 
 void hid_task() {
@@ -383,11 +385,11 @@ void hid_task() {
                     break;
                 case BallFunction::VERTICAL_SCROLL:
                 case BallFunction::VERTICAL_SCROLL_INVERTED:
-                    handle_scroll(ball, axis, ball_function, movement, &report.vwheel, 1 << 0);
+                    report.vwheel += handle_scroll(ball, axis, ball_function, movement, 1 << 0);
                     break;
                 case BallFunction::HORIZONTAL_SCROLL:
                 case BallFunction::HORIZONTAL_SCROLL_INVERTED:
-                    handle_scroll(ball, axis, ball_function, movement, &report.hwheel, 1 << 2);
+                    report.hwheel += handle_scroll(ball, axis, ball_function, movement, 1 << 2);
                     break;
             }
         }
