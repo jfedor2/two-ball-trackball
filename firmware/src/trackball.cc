@@ -251,12 +251,12 @@ config_t config = {
         { BallFunction::VERTICAL_SCROLL, BallFunction::NO_FUNCTION },
     },
     .ball_cpi = {
-        1200 / 100,
-        1600 / 100,
+        600 / 100,
+        800 / 100,
     },
     .ball_shifted_cpi = {
-        1200 / 100,
-        1600 / 100,
+        600 / 100,
+        800 / 100,
     },
     .button_function = {
         ButtonFunction::BUTTON1,
@@ -301,6 +301,10 @@ int16_t handle_scroll(int ball, int axis, BallFunction ball_function, int16_t mo
 }
 
 void hid_task() {
+    if (!tud_hid_ready()) {
+        return;
+    }
+
     memset(&report, 0, sizeof(report));
 
     uint32_t pin_state = gpio_get_all();
@@ -403,9 +407,7 @@ void hid_task() {
     //     reset_usb_boot(0, 0);
     // }
 
-    if (tud_hid_ready()) {
-        tud_hid_report(1, &report, sizeof(report));
-    }
+    tud_hid_report(1, &report, sizeof(report));
 }
 
 void pin_init(uint pin) {
